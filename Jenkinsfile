@@ -11,14 +11,17 @@ pipeline {
                 bat 'npm install'  // Using 'bat' for Windows
             }
         }
-        stage('Run Tests') {
+        stage('Deploy to EC2') {
             steps {
-                bat 'npm test || echo "No tests found"'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                bat 'start /b node server.js'  // Running Node.js app in background
+                sshagent(['your-ec2-ssh-credentials']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@43.204.114.152 << EOF
+                    cd jenkins-cicd-demo
+                    git pull origin main
+                    nohup node server.js &  # or python app.py for Flask
+                    EOF
+                    '''
+                }
             }
         }
     }
